@@ -100,7 +100,7 @@ export default function DisplayScreen() {
   }, []) // Run once on mount
 
   const addLog = (message: string, type: 'info' | 'error' = 'info') => {
-    const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })
     setLogs(prev => [...prev.slice(-5), { msg: `[${timestamp}] ${message}`, type }])
   }
 
@@ -316,7 +316,7 @@ export default function DisplayScreen() {
           </div>
         )}
         <div className="text-5xl font-mono font-medium">
-          {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
       </header>
 
