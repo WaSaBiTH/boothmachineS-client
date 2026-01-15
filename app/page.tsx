@@ -139,13 +139,17 @@ export default function DisplayScreen() {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || `${apiHost}:${apiPort}`;
 
         // 1. Get IP if explicitly set or fetch
-        let currentIp = 'Unknown';
-        try {
-          const ipRes = await fetch(`${apiUrl}/api/whoami`);
-          const ipData = await ipRes.json();
-          currentIp = ipData.ip;
-        } catch (e) {
-          // console.error("IP Fetch error", e);
+        let currentIp = process.env.NEXT_PUBLIC_DEVICE_IP || 'Unknown';
+
+        // Only fetch whoami if we don't have an Env IP
+        if (currentIp === 'Unknown') {
+          try {
+            const ipRes = await fetch(`${apiUrl}/api/whoami`);
+            const ipData = await ipRes.json();
+            currentIp = ipData.ip;
+          } catch (e) {
+            // console.error("IP Fetch error", e);
+          }
         }
 
         if (loading && logs.length < 4) addLog(`IP Detected: ${currentIp}`)
