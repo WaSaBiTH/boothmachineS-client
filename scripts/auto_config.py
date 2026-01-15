@@ -6,6 +6,11 @@ import platform
 import subprocess
 import re
 
+import urllib.request
+import json
+import threading
+import time
+
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.settimeout(0)
@@ -73,8 +78,12 @@ def update_env():
     new_lines = []
     keys_updated = set()
     
-    # Track existing PORT
-    port = "3000"
+    # Track existing config
+    config = {
+        "PORT": "3000",
+        "NEXT_PUBLIC_API_URL": "http://localhost:4000",
+        "NEXT_PUBLIC_POLLING_INTERVAL": "30000" # Default 30s
+    }
 
     # Update existing lines
     for line in env_lines:
@@ -85,6 +94,7 @@ def update_env():
             
         key_val = line.split('=')
         key = key_val[0].strip()
+        val = key_val[1].strip() if len(key_val) > 1 else ""
         
         if key == 'NEXT_PUBLIC_DEVICE_ID':
             new_lines.append(f"NEXT_PUBLIC_DEVICE_ID={mac}")
@@ -92,9 +102,9 @@ def update_env():
         elif key == 'NEXT_PUBLIC_DEVICE_IP':
             new_lines.append(f"NEXT_PUBLIC_DEVICE_IP={ip}")
             keys_updated.add(key)
-        elif key == 'PORT':
-            if len(key_val) > 1 and key_val[1].strip():
-                port = key_val[1].strip()
+        elif key in config:
+            if val:
+                config[key] = val
             new_lines.append(line)
         else:
             new_lines.append(line)
@@ -110,7 +120,48 @@ def update_env():
         
     print(f"Updated {env_path}")
     print("------------------------------------")
-    return port
+    
+    return {
+        "port": config["PORT"],
+        "api_url": config["NEXT_PUBLIC_API_URL"],
+        "polling_interval": int(config.get("NEXT_PUBLIC_POLLING_INTERVAL", 30000)),
+        "ip": ip,
+        "mac": mac
+    }
+
+def send_heartbeat(api_url, mac, ip):
+    url = f"{api_url}/api/device/heartbeat"
+    data = {
+        "macAddress": mac,
+        "ipAddress": ip
+    }
+    
+    try:
+        req = urllib.request.Request(
+            url, 
+            data=json.dumps(data).encode('utf-8'),
+            headers={'Content-Type': 'application/json'}
+        )
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                # print(f"Heartbeat sent to {url}")
+                pass
+            else:
+                print(f"Heartbeat failed: {response.status}")
+    except Exception as e:
+        print(f"Heartbeat error: {e}")
+
+def heartbeat_loop(config):
+    interval = config["polling_interval"] / 1000.0 # Convert to seconds
+    if interval < 5: interval = 5 # Minimum 5 seconds
+    
+    print(f"Starting heartbeat loop every {interval}s to {config['api_url']}")
+    
+    while True:
+        # Re-detect IP in case it changes
+        current_ip = get_ip_address()
+        send_heartbeat(config["api_url"], config["mac"], current_ip)
+        time.sleep(interval)
 
 def run_command(command, port):
     if not command:
@@ -137,7 +188,12 @@ def run_command(command, port):
         print(f"Error running command: {e}")
 
 if __name__ == "__main__":
-    port = update_env()
+    config = update_env()
+    
+    # Start heartbeat thread
+    if config["api_url"]:
+        t = threading.Thread(target=heartbeat_loop, args=(config,), daemon=True)
+        t.start()
     
     if len(sys.argv) > 1:
-        run_command(sys.argv[1], port)
+        run_command(sys.argv[1], config["port"])

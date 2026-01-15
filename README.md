@@ -5,6 +5,7 @@ A Next.js 14 client application for the BoothMachine Smart Room Display System. 
 ## Features
 
 - **Dynamic Identification**: Automatically detects the device's Real MAC Address and IP Address at runtime.
+- **Persistent Heartbeat**: Periodically reports IP usage to the API (every 30s by default) to keep status live.
 - **Auto-Configuration**: Updates `.env` automatically on startup using `auto_config.py`.
 - **Configurable API**: Supports split Host/Port configuration.
 - **Cross-Platform Setup**: Includes `setup_device.py` for easy initialization.
@@ -62,6 +63,10 @@ NEXT_PUBLIC_API_PORT=4000
 
 # Client Port
 PORT=3001
+
+# Heartbeat Configuration
+NEXT_PUBLIC_POLLING_INTERVAL=30000 
+# (in ms, default: 30000)
 
 # Auto-Generated (Do not edit manually unless necessary)
 NEXT_PUBLIC_DEVICE_ID=XX:XX:XX:XX:XX:XX
