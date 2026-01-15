@@ -73,6 +73,9 @@ def update_env():
     new_lines = []
     keys_updated = set()
     
+    # Track existing PORT
+    port = "3000"
+
     # Update existing lines
     for line in env_lines:
         line = line.strip()
@@ -80,13 +83,19 @@ def update_env():
             new_lines.append(line)
             continue
             
-        key = line.split('=')[0].strip()
+        key_val = line.split('=')
+        key = key_val[0].strip()
+        
         if key == 'NEXT_PUBLIC_DEVICE_ID':
             new_lines.append(f"NEXT_PUBLIC_DEVICE_ID={mac}")
             keys_updated.add(key)
         elif key == 'NEXT_PUBLIC_DEVICE_IP':
             new_lines.append(f"NEXT_PUBLIC_DEVICE_IP={ip}")
             keys_updated.add(key)
+        elif key == 'PORT':
+            if len(key_val) > 1 and key_val[1].strip():
+                port = key_val[1].strip()
+            new_lines.append(line)
         else:
             new_lines.append(line)
             
@@ -101,6 +110,34 @@ def update_env():
         
     print(f"Updated {env_path}")
     print("------------------------------------")
+    return port
+
+def run_command(command, port):
+    if not command:
+        return
+
+    cmd = []
+    if command == "dev":
+        cmd = ["npx", "next", "dev", "-p", port]
+    elif command == "start":
+        cmd = ["npx", "next", "start", "-p", port]
+    elif command == "build":
+        cmd = ["npx", "next", "build"]
+    else:
+        print(f"Unknown command: {command}")
+        return
+
+    print(f"Exec: {' '.join(cmd)}")
+    try:
+        # shell=True is often needed on Windows for npx resolution if not fully qualified
+        subprocess.run(cmd, shell=(platform.system() == "Windows"))
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        print(f"Error running command: {e}")
 
 if __name__ == "__main__":
-    update_env()
+    port = update_env()
+    
+    if len(sys.argv) > 1:
+        run_command(sys.argv[1], port)

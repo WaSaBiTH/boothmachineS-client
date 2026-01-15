@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "python scripts/auto_config.py && next dev",
-    "build": "python scripts/auto_config.py && next build",
-    "start": "python scripts/auto_config.py && next start",
+    "dev": "python scripts/auto_config.py dev",
+    "build": "python scripts/auto_config.py build",
+    "start": "python scripts/auto_config.py start",
     "lint": "eslint"
   },
   "dependencies": {
