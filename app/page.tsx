@@ -58,6 +58,7 @@ export default function DisplayScreen() {
   const [loading, setLoading] = useState(true)
   const [logs, setLogs] = useState<{ msg: string, type: 'info' | 'error' }[]>([])
   const [time, setTime] = useState(new Date())
+  const [lastSync, setLastSync] = useState<Date | null>(null)
 
   // Initialize MAC from Env or API
   useEffect(() => {
@@ -124,7 +125,11 @@ export default function DisplayScreen() {
     let timeoutId: NodeJS.Timeout
 
     const fetchStatus = async () => {
-      let nextDelay = 3000
+      // Default to 10s if not set, but user requested 30s.
+      // Logic: Read env -> parse int -> fallback to 30000
+      const envInterval = process.env.NEXT_PUBLIC_POLLING_INTERVAL
+      const pollInterval = envInterval ? parseInt(envInterval) : 30000
+      let nextDelay = pollInterval
 
       try {
         if (loading && logs.length < 3) addLog("Detecting IP address...")
@@ -158,6 +163,7 @@ export default function DisplayScreen() {
         if (loading) addLog("Response received...")
 
         const data = await res.json()
+        setLastSync(new Date())
 
         if (data.command === 'REFRESH') {
           addLog("Command: REFRESH executing...")
@@ -310,7 +316,7 @@ export default function DisplayScreen() {
           </div>
         )}
         <div className="text-5xl font-mono font-medium">
-          {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
         </div>
       </header>
 
@@ -457,7 +463,7 @@ export default function DisplayScreen() {
 
       {/* Footer / Ticker */}
       <footer className="p-4 bg-black/10 text-center text-sm opacity-60 h-14 shrink-0 flex items-center justify-center">
-        TermId: {mac} | Room: {deviceInfo.room || '-'} | Updated: {time.toLocaleTimeString()}
+        TermId: {mac} | Room: {deviceInfo.room || '-'} | Updated: {lastSync ? lastSync.toLocaleTimeString() : 'Connecting...'}
       </footer>
     </div>
   )

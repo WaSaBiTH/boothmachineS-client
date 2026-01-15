@@ -118,9 +118,9 @@ def run_command(command, port):
 
     cmd = []
     if command == "dev":
-        cmd = ["npx", "next", "dev", "-p", port]
+        cmd = ["npx", "next", "dev", "-p", port, "-H", "127.0.0.1"]
     elif command == "start":
-        cmd = ["npx", "next", "start", "-p", port]
+        cmd = ["npx", "next", "start", "-p", port, "-H", "127.0.0.1"]
     elif command == "build":
         cmd = ["npx", "next", "build"]
     else:
