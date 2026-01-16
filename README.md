@@ -28,7 +28,7 @@ python scripts/setup_device.py
 
 Prompts:
 - **API URL**: The URL of your main `boothmachineS-config` API (e.g., `http://192.168.1.10:4000`).
-- **Client Port**: The port this screen should run on (e.g., `3001`).
+- **Client Port**: The port this screen should run on (e.g., `3001.`).
 
 This will generate a `.env` file and platform-specific startup scripts.
 
