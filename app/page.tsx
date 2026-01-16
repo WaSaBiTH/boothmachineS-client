@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { QRCodeSVG } from "qrcode.react"
+import { Clock } from "@/components/clock"
 // Remove Card/Skeleton if unused in the final code, but keeping imports if needed
 // The original code imported them but used standard divs mostly. I will keep them if they were used.
 // Original imports: import { Card } from "@/components/ui/card" -> Not used in the visible code but imported.
@@ -57,7 +58,7 @@ export default function DisplayScreen() {
   const [ad, setAd] = useState<{ id: string, name: string, type: 'IMAGE' | 'VIDEO', url: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [logs, setLogs] = useState<{ msg: string, type: 'info' | 'error' }[]>([])
-  const [time, setTime] = useState(new Date())
+  // const [time, setTime] = useState(new Date()) -> Moved to Clock component
   const [lastSync, setLastSync] = useState<Date | null>(null)
 
   // Initialize MAC from Env or API
@@ -107,10 +108,10 @@ export default function DisplayScreen() {
   const lastApiStatus = useRef<string | null>(null)
 
   // Clock tick
-  useEffect(() => {
+  /* useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(timer)
-  }, [])
+  }, []) */
 
   // Poll API
   useEffect(() => {
@@ -305,7 +306,7 @@ export default function DisplayScreen() {
   return (
     <div className={`w-screen h-screen flex flex-col transition-colors duration-1000 ${uiParams.bgColor} text-white overflow-hidden`}>
       {/* Header Info */}
-      <header className="flex justify-between items-center px-8 py-6 bg-black/20 backdrop-blur-sm h-24 shrink-0">
+      <header className="flex justify-between items-center px-8 py-6 bg-black/40 h-24 shrink-0">
         {activity?.imageUrl ? (
           <div className="flex items-center gap-6">
             <img src={activity.imageUrl} alt="Activity Logo" className="h-16 w-16 object-cover rounded-xl bg-white/10" />
@@ -320,7 +321,7 @@ export default function DisplayScreen() {
           </div>
         )}
         <div className="text-5xl font-mono font-medium">
-          {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <Clock />
         </div>
       </header>
 
@@ -372,7 +373,7 @@ export default function DisplayScreen() {
                       ) : (
                         <img src={ad.url} alt={ad.name} className="w-full h-full object-contain bg-zinc-900" />
                       )}
-                      <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur text-white/80 text-[10px] lg:text-xs px-2 py-1 lg:px-3 lg:py-1 rounded-full uppercase tracking-wider">
+                      <div className="absolute bottom-4 right-4 bg-black/80 text-white/80 text-[10px] lg:text-xs px-2 py-1 lg:px-3 lg:py-1 rounded-full uppercase tracking-wider">
                         Sponsored
                       </div>
                     </div>
@@ -396,14 +397,14 @@ export default function DisplayScreen() {
 
                   {/* Overlay Box Logic */}
                   {status === 'AVAILABLE' ? (
-                    <div className="absolute bottom-6 left-6 bg-black/60 backdrop-blur-md p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
+                    <div className="absolute bottom-6 left-6 bg-black/80 p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
                       <h3 className="text-lg opacity-75 uppercase tracking-widest mb-1">Room Available</h3>
                       <p className="text-2xl font-bold">Scan to book instantly</p>
                     </div>
                   ) : (
                     <>
                       {activity ? (
-                        <div className="absolute bottom-6 left-6 bg-black/60 backdrop-blur-md p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
+                        <div className="absolute bottom-6 left-6 bg-black/80 p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
                           <h3 className="text-lg opacity-75 uppercase tracking-widest mb-1">Current Activity</h3>
                           <p className="text-3xl font-bold mb-1 truncate">{activity.title}</p>
                           <p className="text-lg font-mono opacity-80">
@@ -414,7 +415,7 @@ export default function DisplayScreen() {
                         </div>
                       ) : (
                         status === 'OCCUPIED' && (
-                          <div className="absolute bottom-6 left-6 bg-black/60 backdrop-blur-md p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
+                          <div className="absolute bottom-6 left-6 bg-black/80 p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
                             <h3 className="text-lg opacity-75 uppercase tracking-widest mb-1">Current Activity</h3>
                             <p className="text-2xl font-bold">Meeting in Progress</p>
                           </div>
