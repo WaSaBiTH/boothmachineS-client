@@ -25,26 +25,52 @@ def get_ip_address():
     return IP
 
 def get_mac_address_linux(ip):
-    # Try to find interface for the IP
+    # Method 1: Try to find interface via route
     try:
-        # ip route get <ip> usually tells us the interface
-        # output example: "10.254.254.254 via 192.168.1.1 dev eth0 src 192.168.1.50 uid 1000"
-        if not ip or ip == '127.0.0.1': return None
-        
-        result = subprocess.check_output(f"ip route get {ip}", shell=True).decode()
-        match = re.search(r"dev\s+(\S+)", result)
-        if match:
-            interface = match.group(1)
-            with open(f"/sys/class/net/{interface}/address", 'r') as f:
-                return f.read().strip().upper()
-    except Exception as e:
+        if ip and ip != '127.0.0.1':
+            result = subprocess.check_output(f"ip route get {ip}", shell=True).decode()
+            match = re.search(r"dev\s+(\S+)", result)
+            if match:
+                interface = match.group(1)
+                with open(f"/sys/class/net/{interface}/address", 'r') as f:
+                    mac = f.read().strip().upper()
+                    if len(mac) == 17 and mac != '00:00:00:00:00:00':
+                        return mac
+    except Exception:
         pass
+
+    # Method 2: Scan common interfaces in /sys/class/net
+    try:
+        if os.path.exists('/sys/class/net'):
+            interfaces = os.listdir('/sys/class/net')
+            # Sort to prefer eth0/wlan0 over others
+            interfaces.sort()
+            for iface in interfaces:
+                if iface == 'lo' or iface.startswith('docker') or iface.startswith('veth'):
+                    continue
+                try:
+                    with open(f"/sys/class/net/{iface}/address", 'r') as f:
+                        mac = f.read().strip().upper()
+                        # specific check for valid MAC format
+                        if len(mac) == 17 and mac != '00:00:00:00:00:00':
+                            return mac
+                except:
+                    continue
+    except:
+        pass
+        
     return None
 
 def get_mac_address_global():
     # Fallback to uuid
-    mac = uuid.getnode()
-    return ':'.join(('%012X' % mac)[i:i+2] for i in range(0, 12, 2))
+    try:
+        mac_num = uuid.getnode()
+        mac = ':'.join(('%012X' % mac_num)[i:i+2] for i in range(0, 12, 2))
+        if mac != '00:00:00:00:00:00':
+             return mac
+    except: pass
+    
+    return "00:00:00:00:00:00"
 
 def get_real_mac(ip):
     system = platform.system()
@@ -53,7 +79,7 @@ def get_real_mac(ip):
     if system == "Linux":
         mac = get_mac_address_linux(ip)
     
-    if not mac:
+    if not mac or mac == '00:00:00:00:00:00':
         mac = get_mac_address_global()
         
     return mac
@@ -130,6 +156,10 @@ def update_env():
     }
 
 def send_heartbeat(api_url, mac, ip):
+    # Fix URL Protocol
+    if not api_url.startswith('http'):
+        api_url = f"http://{api_url}"
+
     url = f"{api_url}/api/device/heartbeat"
     data = {
         "macAddress": mac,
@@ -152,15 +182,20 @@ def send_heartbeat(api_url, mac, ip):
         print(f"Heartbeat error: {e}")
 
 def heartbeat_loop(config):
+    # Normalize URL once
+    api_url = config['api_url']
+    if not api_url.startswith('http'):
+        api_url = f"http://{api_url}"
+
     interval = config["polling_interval"] / 1000.0 # Convert to seconds
     if interval < 5: interval = 5 # Minimum 5 seconds
     
-    print(f"Starting heartbeat loop every {interval}s to {config['api_url']}")
+    print(f"Starting heartbeat loop every {interval}s to {api_url}")
     
     while True:
         # Re-detect IP in case it changes
         current_ip = get_ip_address()
-        send_heartbeat(config["api_url"], config["mac"], current_ip)
+        send_heartbeat(api_url, config["mac"], current_ip)
         time.sleep(interval)
 
 def run_command(command, port):
