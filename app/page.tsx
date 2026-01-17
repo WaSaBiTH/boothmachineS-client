@@ -375,8 +375,14 @@ export default function DisplayScreen() {
                       ) : (
                         <img src={ad.url} alt={ad.name} className="w-full h-full object-contain bg-zinc-900" />
                       )}
-                      <div className="absolute bottom-4 right-4 bg-black/80 text-white/80 text-[10px] lg:text-xs px-2 py-1 lg:px-3 lg:py-1 rounded-full uppercase tracking-wider">
-                        Sponsored
+                      <div className="absolute bottom-4 right-4">
+                        <Image
+                          src="/CE_LOGO.webp"
+                          alt="CE Logo"
+                          width={60}
+                          height={60}
+                          className="w-12 h-12 object-contain"
+                        />
                       </div>
                     </div>
                   </div>
