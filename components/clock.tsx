@@ -11,10 +11,16 @@ export function Clock({ className }: ClockProps) {
 
     useEffect(() => {
         // Initial set
-        setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }))
+        const formatTime = (date: Date) => {
+            const hours = date.getHours();
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        setTime(formatTime(new Date()));
 
         const timer = setInterval(() => {
-            setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }))
+            setTime(formatTime(new Date()));
         }, 1000)
 
         return () => clearInterval(timer)

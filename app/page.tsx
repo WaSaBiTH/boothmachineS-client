@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { QRCodeSVG } from "qrcode.react"
+import Image from "next/image"
 import { Clock } from "@/components/clock"
 // Remove Card/Skeleton if unused in the final code, but keeping imports if needed
 // The original code imported them but used standard divs mostly. I will keep them if they were used.
@@ -316,8 +317,9 @@ export default function DisplayScreen() {
             </div>
           </div>
         ) : (
-          <div className="text-4xl font-bold tracking-tighter">
-            Room <span className="text-2xl font-light opacity-80">| {deviceInfo.room || 'Unassigned Room'}</span>
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold tracking-[0.35em] opacity-70 uppercase border-b border-white/40 pb-1 mb-0.5 w-fit">Room</span>
+            <span className="text-5xl font-mono font-medium tracking-tight">{deviceInfo.room || '---'}</span>
           </div>
         )}
         <div className="text-5xl font-mono font-medium">
@@ -455,12 +457,25 @@ export default function DisplayScreen() {
             </div>
 
             {/* Right Panel: Fixed QR Code (Always on Right for Standard Mode) */}
-            <div className="w-[30%] max-w-sm shrink-0 bg-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-8 text-slate-900 animate-in zoom-in-50 duration-500 h-full max-h-full">
+            <div className="w-[30%] max-w-sm shrink-0 bg-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-8 text-slate-900 animate-in zoom-in-50 duration-500 h-full max-h-full relative overflow-hidden">
+
+              {/* Logo with Orange Shadow & Floating Effect */}
               <div className="bg-white p-4 rounded-xl shadow-sm mb-6 shrink-0">
                 <QRCodeSVG value="https://docs.google.com/forms/d/1avJMz3UUmtTo6N08Jeq4lRPmGWOv9GKXd2QxRL_ZAm4" size={180} level="H" className="w-full h-auto max-w-[200px]" />
               </div>
               <p className="text-center text-xl font-bold shrink-0">Scan to Check-in</p>
               <p className="text-center text-slate-500 mt-2 shrink-0">Use your phone to register your attendance.</p>
+
+              {/* Logo with Orange Shadow - Bottom Right */}
+              <div className="absolute bottom-4 right-4 drop-shadow-[0_8px_8px_rgba(249,115,22,0.4)]">
+                <Image
+                  src="/CE_LOGO.webp"
+                  alt="CE Logo"
+                  width={60}
+                  height={60}
+                  className="w-16 h-16 object-contain"
+                />
+              </div>
             </div>
           </>
         )}
