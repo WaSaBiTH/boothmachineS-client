@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react"
 import { QRCodeSVG } from "qrcode.react"
 import Image from "next/image"
 import { Clock } from "@/components/clock"
+import { UnderwaterBackground } from "@/components/ui/underwater-background"
+import { BubbleBackground } from "@/components/ui/bubble-background"
 // Remove Card/Skeleton if unused in the final code, but keeping imports if needed
 // The original code imported them but used standard divs mostly. I will keep them if they were used.
 // Original imports: import { Card } from "@/components/ui/card" -> Not used in the visible code but imported.
@@ -230,6 +232,8 @@ export default function DisplayScreen() {
   }, [mac, status, loading])
 
   const uiParams = getStatusParams(status)
+  const isDefaultState = status === 'AVAILABLE' && !activity
+  const isBubbleState = status === 'OCCUPIED' || !!activity
 
   if (!mac) return <div className="bg-black w-screen h-screen"></div>
 
@@ -305,192 +309,196 @@ export default function DisplayScreen() {
 
   // 3. Main Registered UI
   return (
-    <div className={`w-screen h-screen flex flex-col transition-colors duration-1000 ${uiParams.bgColor} text-white overflow-hidden`}>
-      {/* Header Info */}
-      <header className="flex justify-between items-center px-8 py-6 bg-black/40 h-24 shrink-0">
-        {activity?.imageUrl ? (
-          <div className="flex items-center gap-6">
-            <img src={activity.imageUrl} alt="Activity Logo" className="h-16 w-16 object-cover rounded-xl bg-white/10" />
-            <div className="flex flex-col">
-              <span className="text-3xl font-bold tracking-tighter">{deviceInfo.room || 'Room'}</span>
-              <span className="text-sm opacity-70 uppercase tracking-widest">Running Activity</span>
+    <>
+      {isDefaultState && <UnderwaterBackground className="z-0" />}
+      {isBubbleState && <BubbleBackground className="z-0" interactive />}
+      <div className={`w-screen h-screen flex flex-col transition-colors duration-1000 ${(isDefaultState || isBubbleState) ? 'bg-transparent' : uiParams.bgColor} text-white overflow-hidden relative z-10`}>
+        {/* Header Info */}
+        <header className="flex justify-between items-center px-8 py-6 bg-black/40 h-24 shrink-0">
+          {activity?.imageUrl ? (
+            <div className="flex items-center gap-6">
+              <img src={activity.imageUrl} alt="Activity Logo" className="h-16 w-16 object-cover rounded-xl bg-white/10" />
+              <div className="flex flex-col">
+                <span className="text-3xl font-bold tracking-tighter">{deviceInfo.room || 'Room'}</span>
+                <span className="text-sm opacity-70 uppercase tracking-widest">Running Activity</span>
+              </div>
             </div>
+          ) : (
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold tracking-[0.35em] opacity-70 uppercase border-b border-white/40 pb-1 mb-0.5 w-fit">Room</span>
+              <span className="text-5xl font-mono font-medium tracking-tight">{deviceInfo.room || '---'}</span>
+            </div>
+          )}
+          <div className="text-5xl font-mono font-medium">
+            <Clock />
           </div>
-        ) : (
-          <div className="flex flex-col">
-            <span className="text-xs font-semibold tracking-[0.35em] opacity-70 uppercase border-b border-white/40 pb-1 mb-0.5 w-fit">Room</span>
-            <span className="text-5xl font-mono font-medium tracking-tight">{deviceInfo.room || '---'}</span>
-          </div>
-        )}
-        <div className="text-5xl font-mono font-medium">
-          <Clock />
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 flex items-stretch justify-center p-8 gap-8 overflow-hidden relative">
+        {/* Main Content Area */}
+        <main className="flex-1 flex items-stretch justify-center p-8 gap-8 overflow-hidden relative">
 
-        {/* 1. QR SCREEN MODE */}
-        {activity?.qrCode ? (
-          (() => {
-            return (
-              <div className="flex-1 w-full h-full flex items-center justify-center gap-6 lg:gap-10">
-                {/* Left/Main Panel: QR Code, Title, Description */}
-                <div className={`flex flex-col justify-center items-center text-center animate-in zoom-in-95 duration-500 ${ad ? 'w-[60%] lg:w-[65%]' : 'w-full'} transition-all`}>
+          {/* 1. QR SCREEN MODE */}
+          {activity?.qrCode ? (
+            (() => {
+              return (
+                <div className="flex-1 w-full h-full flex items-center justify-center gap-6 lg:gap-10">
+                  {/* Left/Main Panel: QR Code, Title, Description */}
+                  <div className={`flex flex-col justify-center items-center text-center animate-in zoom-in-95 duration-500 ${ad ? 'w-[60%] lg:w-[65%]' : 'w-full'} transition-all pt-12 lg:pt-24`}>
 
-                  {/* QR Code Container */}
-                  <div className={`bg-white p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] shadow-[0_0_70px_-10px_rgba(255,255,255,0.3)] ring-4 ring-white/20 flex items-center justify-center aspect-square w-auto mb-6 lg:mb-10 mt-4 lg:mt-8 ${ad ? 'max-h-[38vh] lg:max-h-[42vh]' : 'max-h-[42vh] lg:max-h-[50vh]'}`}>
-                    {activity.qrCode.type === 'IMAGE_URL' ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={activity.qrCode.data} alt="QR" className="w-full h-full object-contain" />
-                    ) : (
-                      <QRCodeSVG value={activity.qrCode.data} size={400} level="H" className="w-full h-full" />
-                    )}
-                  </div>
-
-                  {/* Text Content */}
-                  <div className={`space-y-1 lg:space-y-4 max-w-4xl flex flex-col items-center ${ad ? 'px-4' : ''}`}>
-                    <h1 className={`${ad ? 'text-4xl lg:text-6xl' : 'text-5xl lg:text-8xl'} font-black tracking-tight leading-none break-words line-clamp-2`}>
-                      {activity.title}
-                    </h1>
-                    {activity.description && (
-                      <p className={`${ad ? 'text-xl lg:text-3xl' : 'text-2xl lg:text-5xl'} mt-2 lg:mt-0 font-light opacity-80 leading-tight line-clamp-3`}>
-                        {activity.description}
-                      </p>
-                    )}
-                    <div className={`pt-3 lg:pt-4 opacity-60 font-mono border-t border-white/20 inline-block mt-4 ${ad ? 'text-lg lg:text-xl' : 'text-lg lg:text-2xl'}`}>
-                      {new Date(activity.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      <span className="mx-3">-</span>
-                      {new Date(activity.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Panel: Ad */}
-                {ad && (
-                  <div className="w-[40%] lg:w-[35%] shrink-0 flex flex-col h-full max-h-[85vh] animate-in slide-in-from-right-10 duration-700 justify-center">
-                    <div className="w-full h-full bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative">
-                      {ad.type === 'VIDEO' ? (
-                        <video src={ad.url} autoPlay loop muted className="w-full h-full object-contain bg-zinc-900" />
+                    {/* QR Code Container */}
+                    <div className={`bg-white p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] shadow-[0_0_70px_-10px_rgba(255,255,255,0.3)] ring-4 ring-white/20 flex items-center justify-center aspect-square w-auto mb-6 lg:mb-10 mt-4 lg:mt-8 ${ad ? 'max-h-[38vh] lg:max-h-[42vh]' : 'max-h-[42vh] lg:max-h-[50vh]'}`}>
+                      {activity.qrCode.type === 'IMAGE_URL' ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={activity.qrCode.data} alt="QR" className="w-full h-full object-contain" />
                       ) : (
-                        <img src={ad.url} alt={ad.name} className="w-full h-full object-contain bg-zinc-900" />
+                        <QRCodeSVG value={activity.qrCode.data} size={400} level="H" className="w-full h-full" />
                       )}
-                      <div className="absolute bottom-4 right-4">
-                        <Image
-                          src="/CE_LOGO.webp"
-                          alt="CE Logo"
-                          width={60}
-                          height={60}
-                          className="w-12 h-12 object-contain"
-                        />
+                    </div>
+
+                    {/* Text Content */}
+                    <div className={`space-y-1 lg:space-y-4 max-w-4xl flex flex-col items-center ${ad ? 'px-4' : ''}`}>
+                      <h1 className={`${ad ? 'text-4xl lg:text-6xl' : 'text-5xl lg:text-8xl'} font-black tracking-tight leading-none break-words line-clamp-2`}>
+                        {activity.title}
+                      </h1>
+                      {activity.description && (
+                        <p className={`${ad ? 'text-xl lg:text-3xl' : 'text-2xl lg:text-5xl'} mt-2 lg:mt-0 font-light opacity-80 leading-tight line-clamp-3`}>
+                          {activity.description}
+                        </p>
+                      )}
+                      <div className={`pt-3 lg:pt-4 opacity-60 font-mono border-t border-white/20 inline-block mt-4 ${ad ? 'text-lg lg:text-xl' : 'text-lg lg:text-2xl'}`}>
+                        {new Date(activity.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        <span className="mx-3">-</span>
+                        {new Date(activity.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
-            )
-          })()
-        ) : (
-          /* 2. STANDARD ACTIVITY MODE */
-          <>
-            {/* Left Panel: Ad (Priority) OR Activity Info */}
-            <div className="flex-1 flex flex-col justify-center space-y-8 animate-in fade-in slide-in-from-left-10 duration-500 min-w-0">
-              {ad ? (
-                <div className="w-full h-full max-h-[calc(100vh-12rem)] relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 ring-4 ring-black/20 bg-black">
-                  {ad.type === 'VIDEO' ? (
-                    <video src={ad.url} autoPlay loop muted className="w-full h-full object-contain" />
-                  ) : (
-                    <img src={ad.url} alt={ad.name} className="w-full h-full object-contain" />
-                  )}
 
-                  {/* Overlay Box Logic */}
-                  {status === 'AVAILABLE' ? (
-                    <div className="absolute bottom-6 left-6 bg-black/80 p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
-                      <h3 className="text-lg opacity-75 uppercase tracking-widest mb-1">Room Available</h3>
-                      <p className="text-2xl font-bold">Scan to book instantly</p>
-                    </div>
-                  ) : (
-                    <>
-                      {activity ? (
-                        <div className="absolute bottom-6 left-6 bg-black/80 p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
-                          <h3 className="text-lg opacity-75 uppercase tracking-widest mb-1">Current Activity</h3>
-                          <p className="text-3xl font-bold mb-1 truncate">{activity.title}</p>
-                          <p className="text-lg font-mono opacity-80">
-                            {new Date(activity.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            <span className="mx-2">-</span>
-                            {new Date(activity.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </p>
+                  {/* Right Panel: Ad */}
+                  {ad && (
+                    <div className="w-[40%] lg:w-[35%] shrink-0 flex flex-col h-full max-h-[85vh] animate-in slide-in-from-right-10 duration-700 justify-center">
+                      <div className="w-full h-full bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative">
+                        {ad.type === 'VIDEO' ? (
+                          <video src={ad.url} autoPlay loop muted className="w-full h-full object-contain bg-zinc-900" />
+                        ) : (
+                          <img src={ad.url} alt={ad.name} className="w-full h-full object-contain bg-zinc-900" />
+                        )}
+                        <div className="absolute bottom-4 right-4">
+                          <Image
+                            src="/CE_LOGO.webp"
+                            alt="CE Logo"
+                            width={60}
+                            height={60}
+                            className="w-12 h-12 object-contain"
+                          />
                         </div>
-                      ) : (
-                        status === 'OCCUPIED' && (
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })()
+          ) : (
+            /* 2. STANDARD ACTIVITY MODE */
+            <>
+              {/* Left Panel: Ad (Priority) OR Activity Info */}
+              <div className="flex-1 flex flex-col justify-center space-y-8 animate-in fade-in slide-in-from-left-10 duration-500 min-w-0">
+                {ad ? (
+                  <div className="w-full h-full max-h-[calc(100vh-12rem)] relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 ring-4 ring-black/20 bg-black">
+                    {ad.type === 'VIDEO' ? (
+                      <video src={ad.url} autoPlay loop muted className="w-full h-full object-contain" />
+                    ) : (
+                      <img src={ad.url} alt={ad.name} className="w-full h-full object-contain" />
+                    )}
+
+                    {/* Overlay Box Logic */}
+                    {status === 'AVAILABLE' ? (
+                      <div className="absolute bottom-6 left-6 bg-black/80 p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
+                        <h3 className="text-lg opacity-75 uppercase tracking-widest mb-1">Room Available</h3>
+                        <p className="text-2xl font-bold">Scan to book instantly</p>
+                      </div>
+                    ) : (
+                      <>
+                        {activity ? (
                           <div className="absolute bottom-6 left-6 bg-black/80 p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
                             <h3 className="text-lg opacity-75 uppercase tracking-widest mb-1">Current Activity</h3>
-                            <p className="text-2xl font-bold">Meeting in Progress</p>
+                            <p className="text-3xl font-bold mb-1 truncate">{activity.title}</p>
+                            <p className="text-lg font-mono opacity-80">
+                              {new Date(activity.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              <span className="mx-2">-</span>
+                              {new Date(activity.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
                           </div>
-                        )
-                      )}
-                    </>
-                  )}
-                </div>
-              ) : (
-                // No Ad - Standard Text UI
-                <div className="flex flex-col justify-center h-full">
-                  <h1 className="text-7xl lg:text-8xl font-black uppercase tracking-tight leading-none break-words">
-                    {uiParams.message}
-                  </h1>
-                  <p className="text-3xl lg:text-4xl mt-4 opacity-90 font-light">{uiParams.subtext}</p>
+                        ) : (
+                          status === 'OCCUPIED' && (
+                            <div className="absolute bottom-6 left-6 bg-black/80 p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
+                              <h3 className="text-lg opacity-75 uppercase tracking-widest mb-1">Current Activity</h3>
+                              <p className="text-2xl font-bold">Meeting in Progress</p>
+                            </div>
+                          )
+                        )}
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  // No Ad - Standard Text UI
+                  <div className="flex flex-col justify-center h-full">
+                    <h1 className="text-7xl lg:text-8xl font-black uppercase tracking-tight leading-none break-words">
+                      {uiParams.message}
+                    </h1>
+                    <p className="text-3xl lg:text-4xl mt-4 opacity-90 font-light">{uiParams.subtext}</p>
 
-                  {/* Activity Info */}
-                  {activity && (
-                    <div className="mt-8 lg:mt-12 bg-black/30 p-8 rounded-2xl border-l-8 border-white">
-                      <h3 className="text-xl lg:text-2xl opacity-75 uppercase tracking-widest text-sm mb-2">Current Activity</h3>
-                      <p className="text-4xl lg:text-5xl font-bold truncate">{activity.title}</p>
-                      <p className="text-xl lg:text-2xl font-light mt-2 opacity-80 border-t border-white/20 pt-2 inline-block">
-                        {new Date(activity.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        <span className="mx-2">-</span>
-                        {new Date(activity.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  )}
-                  {!activity && status === 'OCCUPIED' && (
-                    <div className="mt-8 lg:mt-12 bg-black/30 p-8 rounded-2xl border-l-8 border-white">
-                      <h3 className="text-xl lg:text-2xl opacity-75 uppercase tracking-widest text-sm mb-2">Current Activity</h3>
-                      <p className="text-4xl lg:text-5xl font-bold">Meeting in Progress</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Right Panel: Fixed QR Code (Always on Right for Standard Mode) */}
-            <div className="w-[30%] max-w-sm shrink-0 bg-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-8 text-slate-900 animate-in zoom-in-50 duration-500 h-full max-h-full relative overflow-hidden">
-
-              {/* Logo with Orange Shadow & Floating Effect */}
-              <div className="bg-white p-4 rounded-xl shadow-sm mb-6 shrink-0">
-                <QRCodeSVG value="https://docs.google.com/forms/d/1avJMz3UUmtTo6N08Jeq4lRPmGWOv9GKXd2QxRL_ZAm4" size={180} level="H" className="w-full h-auto max-w-[200px]" />
+                    {/* Activity Info */}
+                    {activity && (
+                      <div className="mt-8 lg:mt-12 bg-black/30 p-8 rounded-2xl border-l-8 border-white">
+                        <h3 className="text-xl lg:text-2xl opacity-75 uppercase tracking-widest text-sm mb-2">Current Activity</h3>
+                        <p className="text-4xl lg:text-5xl font-bold truncate">{activity.title}</p>
+                        <p className="text-xl lg:text-2xl font-light mt-2 opacity-80 border-t border-white/20 pt-2 inline-block">
+                          {new Date(activity.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <span className="mx-2">-</span>
+                          {new Date(activity.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    )}
+                    {!activity && status === 'OCCUPIED' && (
+                      <div className="mt-8 lg:mt-12 bg-black/30 p-8 rounded-2xl border-l-8 border-white">
+                        <h3 className="text-xl lg:text-2xl opacity-75 uppercase tracking-widest text-sm mb-2">Current Activity</h3>
+                        <p className="text-4xl lg:text-5xl font-bold">Meeting in Progress</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-              <p className="text-center text-xl font-bold shrink-0">Scan to Check-in</p>
-              <p className="text-center text-slate-500 mt-2 shrink-0">Use your phone to register your attendance.</p>
 
-              {/* Logo with Orange Shadow - Bottom Right */}
-              <div className="absolute bottom-4 right-4 drop-shadow-[0_8px_8px_rgba(249,115,22,0.4)]">
-                <Image
-                  src="/CE_LOGO.webp"
-                  alt="CE Logo"
-                  width={60}
-                  height={60}
-                  className="w-16 h-16 object-contain"
-                />
+              {/* Right Panel: Fixed QR Code (Always on Right for Standard Mode) */}
+              <div className="w-[30%] max-w-sm shrink-0 bg-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-8 text-slate-900 animate-in zoom-in-50 duration-500 h-full max-h-full relative overflow-hidden">
+
+                {/* Logo with Orange Shadow & Floating Effect */}
+                <div className="bg-white p-4 rounded-xl shadow-sm mb-6 shrink-0">
+                  <QRCodeSVG value="https://docs.google.com/forms/d/1avJMz3UUmtTo6N08Jeq4lRPmGWOv9GKXd2QxRL_ZAm4" size={180} level="H" className="w-full h-auto max-w-[200px]" />
+                </div>
+                <p className="text-center text-xl font-bold shrink-0">Scan to Check-in</p>
+                <p className="text-center text-slate-500 mt-2 shrink-0">Use your phone to register your attendance.</p>
+
+                {/* Logo with Orange Shadow - Bottom Right */}
+                <div className="absolute bottom-4 right-4 drop-shadow-[0_8px_8px_rgba(249,115,22,0.4)]">
+                  <Image
+                    src="/CE_LOGO.webp"
+                    alt="CE Logo"
+                    width={60}
+                    height={60}
+                    className="w-16 h-16 object-contain"
+                  />
+                </div>
               </div>
-            </div>
-          </>
-        )}
-      </main>
+            </>
+          )}
+        </main>
 
-      {/* Footer / Ticker */}
-      <footer className="p-4 bg-black/10 text-center text-sm opacity-60 h-14 shrink-0 flex items-center justify-center">
-        TermId: {mac} | Room: {deviceInfo.room || '-'} | Updated: {lastSync ? lastSync.toLocaleTimeString() : 'Connecting...'}
-      </footer>
-    </div>
+        {/* Footer / Ticker */}
+        <footer className="p-4 bg-black/10 text-center text-sm opacity-60 h-14 shrink-0 flex items-center justify-center">
+          TermId: {mac} | Room: {deviceInfo.room || '-'} | Updated: {lastSync ? lastSync.toLocaleTimeString() : 'Connecting...'}
+        </footer>
+      </div>
+    </>
   )
 }

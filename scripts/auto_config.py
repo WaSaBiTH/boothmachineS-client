@@ -61,6 +61,44 @@ def get_mac_address_linux(ip):
         
     return None
 
+def get_mac_address_windows(target_ip):
+    try:
+        # Use ipconfig /all to get detailed info including MAC
+        # Decode with ignore to handle potential non-utf8 localized characters
+        output = subprocess.check_output("ipconfig /all", shell=True).decode('utf-8', errors='ignore')
+        
+        current_mac = None
+        
+        for line in output.splitlines():
+            line = line.strip()
+            
+            # Match Physical Address
+            # "Physical Address. . . . . . . . . : 24-EB-16-58-34-FF"
+            if "Physical Address" in line:
+                parts = line.split(':')
+                if len(parts) > 1:
+                    raw_mac = parts[-1].strip()
+                    # Convert to standard format: 24:EB:16...
+                    if raw_mac:
+                        current_mac = raw_mac.replace('-', ':').upper()
+            
+            # Match IPv4 Address
+            # "IPv4 Address. . . . . . . . . . . : 172.16.4.116(Preferred)"
+            if "IPv4 Address" in line:
+                parts = line.split(':')
+                if len(parts) > 1:
+                    val = parts[-1].strip()
+                    # Check if the IP matches our target IP
+                    # Use startswith to handle "(Preferred)" suffix
+                    if target_ip and val.startswith(target_ip):
+                        return current_mac
+                        
+    except Exception as e:
+        print(f"Error getting Windows MAC: {e}")
+        pass
+        
+    return None
+
 def get_mac_address_global():
     # Fallback to uuid
     try:
@@ -78,6 +116,8 @@ def get_real_mac(ip):
     
     if system == "Linux":
         mac = get_mac_address_linux(ip)
+    elif system == "Windows":
+        mac = get_mac_address_windows(ip)
     
     if not mac or mac == '00:00:00:00:00:00':
         mac = get_mac_address_global()
