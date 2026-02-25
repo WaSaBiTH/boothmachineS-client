@@ -5,7 +5,7 @@ import { QRCodeSVG } from "qrcode.react"
 import Image from "next/image"
 import { Clock } from "@/components/clock"
 import { UnderwaterBackground } from "@/components/ui/underwater-background"
-import { BubbleBackground } from "@/components/ui/bubble-background"
+import { LightWavesBackground } from "@/components/ui/light-waves"
 // Remove Card/Skeleton if unused in the final code, but keeping imports if needed
 // The original code imported them but used standard divs mostly. I will keep them if they were used.
 // Original imports: import { Card } from "@/components/ui/card" -> Not used in the visible code but imported.
@@ -311,7 +311,7 @@ export default function DisplayScreen() {
   return (
     <>
       {isDefaultState && <UnderwaterBackground className="z-0" />}
-      {isBubbleState && <BubbleBackground className="z-0" interactive />}
+      {isBubbleState && <LightWavesBackground className="z-0" />}
       <div className={`w-screen h-screen flex flex-col transition-colors duration-1000 ${(isDefaultState || isBubbleState) ? 'bg-transparent' : uiParams.bgColor} text-white overflow-hidden relative z-10`}>
         {/* Header Info */}
         <header className="flex justify-between items-center px-8 py-6 bg-black/40 h-24 shrink-0">
