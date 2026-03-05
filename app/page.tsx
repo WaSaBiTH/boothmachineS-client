@@ -63,6 +63,18 @@ export default function DisplayScreen() {
   const [logs, setLogs] = useState<{ msg: string, type: 'info' | 'error' }[]>([])
   // const [time, setTime] = useState(new Date()) -> Moved to Clock component
   const [lastSync, setLastSync] = useState<Date | null>(null)
+  const [showInfo, setShowInfo] = useState(false)
+
+  // Auto-hide device info after 30 seconds
+  useEffect(() => {
+    let timeout: NodeJS.Timeout
+    if (showInfo) {
+      timeout = setTimeout(() => {
+        setShowInfo(false)
+      }, 30000)
+    }
+    return () => clearTimeout(timeout)
+  }, [showInfo])
 
   // Initialize MAC from Env or API
   useEffect(() => {
@@ -382,15 +394,6 @@ export default function DisplayScreen() {
                         ) : (
                           <img src={ad.url} alt={ad.name} className="w-full h-full object-contain bg-zinc-900" />
                         )}
-                        <div className="absolute bottom-4 right-4">
-                          <Image
-                            src="/CE_LOGO.webp"
-                            alt="CE Logo"
-                            width={60}
-                            height={60}
-                            className="w-12 h-12 object-contain"
-                          />
-                        </div>
                       </div>
                     </div>
                   )}
@@ -478,26 +481,56 @@ export default function DisplayScreen() {
                 </div>
                 <p className="text-center text-xl font-bold shrink-0">Scan to Check-in</p>
                 <p className="text-center text-slate-500 mt-2 shrink-0">Use your phone to register your attendance.</p>
-
-                {/* Logo with Orange Shadow - Bottom Right */}
-                <div className="absolute bottom-4 right-4 drop-shadow-[0_8px_8px_rgba(249,115,22,0.4)]">
-                  <Image
-                    src="/CE_LOGO.webp"
-                    alt="CE Logo"
-                    width={60}
-                    height={60}
-                    className="w-16 h-16 object-contain"
-                  />
-                </div>
               </div>
             </>
           )}
         </main>
 
-        {/* Footer / Ticker */}
-        <footer className="p-4 bg-black/10 text-center text-sm opacity-60 h-14 shrink-0 flex items-center justify-center">
-          TermId: {mac} | Room: {deviceInfo.room || '-'} | Updated: {lastSync ? lastSync.toLocaleTimeString() : 'Connecting...'}
-        </footer>
+        {/* Floating Info Button */}
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+          {showInfo && (
+            <div className="bg-black/80 backdrop-blur-xl border border-white/10 text-white rounded-3xl p-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)] w-80 animate-in slide-in-from-bottom-5 fade-in duration-300 origin-bottom-right font-sans">
+              <div className="flex items-center gap-4 mb-4 pb-4 border-b border-white/10">
+                <div className="flex items-center justify-center shrink-0">
+                  <Image src="/CE_LOGO.webp" alt="CE Logo" width={36} height={36} className="opacity-95 drop-shadow-[0_4px_8px_rgba(255,255,255,0.2)]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg tracking-tight text-white/95">Device Status</h3>
+                  <div className="text-xs text-white/60 flex items-center gap-1.5 mt-0.5">
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span> Online
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center group bg-white/5 hover:bg-white/10 p-3 rounded-2xl transition-colors">
+                  <span className="text-sm text-white/60 font-medium tracking-wide">MAC</span>
+                  <span className="font-mono text-sm font-semibold text-white/90">{mac}</span>
+                </div>
+                <div className="flex justify-between items-center group bg-white/5 hover:bg-white/10 p-3 rounded-2xl transition-colors">
+                  <span className="text-sm text-white/60 font-medium tracking-wide">Room</span>
+                  <span className="font-mono text-sm font-semibold text-white/90">{deviceInfo.room || '-'}</span>
+                </div>
+                <div className="flex justify-between items-center group bg-white/5 hover:bg-white/10 p-3 rounded-2xl transition-colors">
+                  <span className="text-sm text-white/60 font-medium tracking-wide">Updated</span>
+                  <span className="font-mono text-sm font-semibold text-white/90">{lastSync ? lastSync.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '---'}</span>
+                </div>
+              </div>
+            </div>
+          )}
+          <button
+            onClick={() => setShowInfo(!showInfo)}
+            className="w-12 h-12 flex items-center justify-center transition-all focus:outline-none group scale-100 hover:scale-110 active:scale-95"
+          >
+            <Image
+              src="/CE_LOGO.webp"
+              alt="Device Info"
+              width={48}
+              height={48}
+              className="w-full h-full object-contain opacity-60 group-hover:opacity-100 transition-opacity filter drop-shadow-lg"
+            />
+          </button>
+        </div>
       </div>
     </>
   )
