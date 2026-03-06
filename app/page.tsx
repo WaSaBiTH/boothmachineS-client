@@ -6,6 +6,8 @@ import Image from "next/image"
 import { Clock } from "@/components/clock"
 import { UnderwaterBackground } from "@/components/ui/underwater-background"
 import { LightWavesBackground } from "@/components/ui/light-waves"
+import GlitchText from "@/components/ui/glitch-text"
+import { RollingText } from "@/components/ui/rolling-text"
 // Remove Card/Skeleton if unused in the final code, but keeping imports if needed
 // The original code imported them but used standard divs mostly. I will keep them if they were used.
 // Original imports: import { Card } from "@/components/ui/card" -> Not used in the visible code but imported.
@@ -292,29 +294,66 @@ export default function DisplayScreen() {
     )
   }
 
-  // 3. Not Registered (Pending) - Black Screen
+  // 3. Not Registered (Pending) - Background Image & Glass UI
   if (status === 'PENDING') {
     return (
-      <div className="w-screen h-screen bg-black flex flex-col items-center justify-center p-8 text-white">
-        <div className="w-24 h-24 border-4 border-red-600 rounded-full flex items-center justify-center mb-8 animate-pulse">
-          <span className="text-4xl">!</span>
+      <div className="w-screen h-screen flex flex-col items-center justify-end p-4 pb-6 lg:pb-12 text-white relative overflow-hidden">
+        <Image
+          src="/CEBG.webp"
+          alt="Background"
+          fill
+          className="object-cover z-0"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent z-0" />
+
+        {/* Top Left Alert Icon */}
+        <div className="absolute top-6 left-8 z-20">
+          <div className="w-10 h-10 lg:w-14 lg:h-14 border-2 border-red-500/80 bg-red-500/20 backdrop-blur-md rounded-full flex items-center justify-center animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.4)]">
+            <span className="text-2xl lg:text-4xl font-black text-red-100 drop-shadow-md">!</span>
+          </div>
         </div>
-        <h1 className="text-4xl font-light tracking-widest uppercase mb-4 text-center">
-          Device Not Registered
-        </h1>
-        <div className="text-center space-y-2">
-          <p className="text-white/50 font-mono bg-white/10 px-4 py-2 rounded inline-block mx-2">
-            ID: {mac}
-          </p>
-          {logs.find(l => l.msg.includes('IP Detected')) && (
-            <p className="text-green-500/80 font-mono bg-green-900/20 px-4 py-2 rounded inline-block mx-2">
-              {logs.find(l => l.msg.includes('IP Detected'))?.msg.split('IP Detected: ')[1] || 'Unknown IP'}
+
+        {/* Top Right Animated Watermark */}
+        <div className="absolute top-6 right-8 z-20 pointer-events-none opacity-80">
+          <GlitchText className="tracking-[0.3em] drop-shadow-lg select-none">
+            CE03 TEAM
+          </GlitchText>
+        </div>
+
+        <div className="z-10 flex flex-col items-center w-full max-w-xl text-center">
+          <div className="flex flex-col lg:flex-row items-center gap-3 mb-4">
+            <RollingText
+              texts={["DEVICE NOT REGISTERED", "PLEASE CONTACT ADMIN", "SYSTEM PENDING SETUP"]}
+              intervalMs={15000}
+              className="text-xl lg:text-3xl font-black tracking-tight drop-shadow-[0_0_15px_rgba(239,68,68,0.8)] text-red-500"
+            />
+          </div>
+
+          <div className="flex justify-center gap-3 w-full">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 px-4 py-2 rounded-xl flex items-center gap-3 shadow-lg">
+              <span className="text-white/60 font-semibold uppercase tracking-wider text-[10px] lg:text-xs">Device ID</span>
+              <span className="font-mono text-sm lg:text-base font-bold text-white">{mac}</span>
+            </div>
+
+            {logs.find(l => l.msg.includes('IP Detected')) && (
+              <div className="bg-white/10 backdrop-blur-xl border border-white/20 px-4 py-2 rounded-xl flex items-center gap-3 shadow-lg">
+                <span className="text-white/60 font-semibold uppercase tracking-wider text-[10px] lg:text-xs">IP Address</span>
+                <span className="font-mono text-sm lg:text-base font-bold text-green-400">
+                  {logs.find(l => l.msg.includes('IP Detected'))?.msg.split('IP Detected: ')[1] || 'Unknown IP'}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6">
+            <p className="text-white/40 tracking-widest uppercase text-[10px] lg:text-xs font-medium animate-pulse flex items-center gap-2">
+              <span className="w-1 h-1 rounded-full bg-white/40"></span>
+              Waiting for administrator setup
+              <span className="w-1 h-1 rounded-full bg-white/40"></span>
             </p>
-          )}
+          </div>
         </div>
-        <p className="text-white/40 text-sm mt-8 animate-bounce">
-          Waiting for administrator...
-        </p>
       </div>
     )
   }
@@ -477,7 +516,7 @@ export default function DisplayScreen() {
 
                 {/* Logo with Orange Shadow & Floating Effect */}
                 <div className="bg-white p-4 rounded-xl shadow-sm mb-6 shrink-0">
-                  <QRCodeSVG value="https://docs.google.com/forms/d/1avJMz3UUmtTo6N08Jeq4lRPmGWOv9GKXd2QxRL_ZAm4" size={180} level="H" className="w-full h-auto max-w-[200px]" />
+                  <QRCodeSVG value="https://dn721809.ca.archive.org/0/items/youtube-xvFZjo5PgG0/xvFZjo5PgG0.mp4" size={180} level="H" className="w-full h-auto max-w-[200px]" />
                 </div>
                 <p className="text-center text-xl font-bold shrink-0">Scan to Check-in</p>
                 <p className="text-center text-slate-500 mt-2 shrink-0">Use your phone to register your attendance.</p>
