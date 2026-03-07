@@ -193,7 +193,7 @@ export default function DisplayScreen() {
         }
 
         // Update info
-        setDeviceInfo({ name: data.deviceName, room: data.roomNumber })
+        setDeviceInfo({ name: data.deviceName, room: data.roomCode })
         setActivity(data.activity || null)
         setAd(data.ad || null)
 
