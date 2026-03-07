@@ -272,23 +272,40 @@ export default function DisplayScreen() {
     )
   }
 
-  // 2. Disabled - Black Screen
+  // 2. Disabled - Background Image & Glass UI
   if (status === 'DISABLED') {
     return (
-      <div className="w-screen h-screen bg-black flex flex-col items-center justify-center p-8 text-white">
-        <div className="w-24 h-24 border-4 border-gray-600 rounded-full flex items-center justify-center mb-8">
-          <span className="text-4xl text-gray-500">OFF</span>
+      <div className="w-screen h-screen flex flex-col items-center justify-end p-4 pb-6 lg:pb-12 text-white relative overflow-hidden">
+        <Image
+          src="/CEBG.webp"
+          alt="Background"
+          fill
+          className="object-cover z-0"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent z-0" />
+        <UnderwaterBackground className="!absolute z-0 opacity-40 mix-blend-color-dodge pointer-events-none" />
+
+        {/* Top Right Animated Watermark */}
+        <div className="absolute top-6 right-8 z-20 pointer-events-none opacity-80">
+          <div className="tracking-[0.3em] drop-shadow-lg select-none text-2xl text-white font-bold">
+            CE03 TEAM
+          </div>
         </div>
-        <h1 className="text-4xl font-bold tracking-widest uppercase mb-4 text-center text-red-500">
-          DEVICE DISABLED
-        </h1>
-        <div className="text-center space-y-2">
-          <p className="text-gray-500">
-            This display client has been disabled by administrator.
-          </p>
-          <p className="text-gray-700 font-mono text-xs mt-4">
-            ID: {mac}
-          </p>
+
+        <div className="z-10 flex flex-col items-center w-full max-w-xl text-center">
+          <div className="flex flex-col lg:flex-row items-center gap-3 mb-4">
+            <RollingText
+              texts={["DEVICE DISABLED", "PLEASE CONTACT ADMIN", "SYSTEM UNAVAILABLE"]}
+              intervalMs={15000}
+              className="text-xl lg:text-3xl font-black tracking-tight drop-shadow-[0_0_15px_rgba(249,115,22,0.8)] text-orange-500"
+            />
+          </div>
+          <div className="mt-8 text-white/40 flex items-center gap-2 text-[10px] lg:text-xs font-semibold tracking-widest uppercase mb-4 lg:mb-8">
+            <span className="w-1 h-1 rounded-full bg-orange-500/50" />
+            THIS DISPLAY CLIENT HAS BEEN DISABLED
+            <span className="w-1 h-1 rounded-full bg-orange-500/50" />
+          </div>
         </div>
       </div>
     )
