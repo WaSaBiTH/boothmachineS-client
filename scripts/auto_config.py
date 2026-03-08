@@ -103,7 +103,8 @@ def get_mac_address_global():
     # Fallback to uuid
     try:
         mac_num = uuid.getnode()
-        mac = ':'.join(('%012X' % mac_num)[i:i+2] for i in range(0, 12, 2))
+        mac_hex = format(mac_num, '012X')
+        mac = ':'.join(re.findall('..', mac_hex))
         if mac != '00:00:00:00:00:00':
              return mac
     except: pass
@@ -215,11 +216,18 @@ def send_heartbeat(api_url, mac, ip):
         with urllib.request.urlopen(req) as response:
             if response.status == 200:
                 # print(f"Heartbeat sent to {url}")
-                pass
+                try:
+                    response_data = json.loads(response.read().decode('utf-8'))
+                    return response_data
+                except Exception as e:
+                    print(f"Error parsing heartbeat response: {e}")
+                    return None
             else:
                 print(f"Heartbeat failed: {response.status}")
+                return None
     except Exception as e:
         print(f"Heartbeat error: {e}")
+        return None
 
 def heartbeat_loop(config):
     # Normalize URL once
@@ -235,7 +243,13 @@ def heartbeat_loop(config):
     while True:
         # Re-detect IP in case it changes
         current_ip = get_ip_address()
-        send_heartbeat(api_url, config["mac"], current_ip)
+        response_data = send_heartbeat(api_url, config["mac"], current_ip)
+        
+        if response_data and response_data.get('command') == 'SHUTDOWN':
+            print("Received SHUTDOWN command. Executing shutdown...")
+            os.system("sudo shutdown -h now")
+            break # Exit the loop as system will shutdown
+
         time.sleep(interval)
 
 def run_command(command, port):

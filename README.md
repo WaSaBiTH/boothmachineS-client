@@ -8,6 +8,7 @@ A Next.js 14 client application for the BoothMachine Smart Room Display System. 
 - **Persistent Heartbeat**: Periodically reports IP usage to the API (every 30s by default) to keep status live.
 - **Auto-Configuration**: Updates `.env` automatically on startup using `auto_config.py`.
 - **Configurable API**: Supports split Host/Port configuration.
+- **Remote Shutdown Support**: Client listens for remote `SHUTDOWN` commands from the server API and cleanly shuts down the host OS (Linux).
 - **Cross-Platform Setup**: Includes `setup_device.py` for easy initialization.
 
 ## Prerequisites

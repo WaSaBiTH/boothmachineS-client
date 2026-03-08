@@ -462,7 +462,7 @@ export default function DisplayScreen() {
               {/* Left Panel: Ad (Priority) OR Activity Info */}
               <div className="flex-1 flex flex-col justify-center space-y-8 animate-in fade-in slide-in-from-left-10 duration-500 min-w-0">
                 {ad ? (
-                  <div className="w-full h-full max-h-[calc(100vh-12rem)] relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 ring-4 ring-black/20 bg-black">
+                  <div className="w-full h-full max-h-full relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 ring-4 ring-black/20 bg-black flex justify-center items-center">
                     {ad.type === 'VIDEO' ? (
                       <video src={ad.url} autoPlay loop muted className="w-full h-full object-contain" />
                     ) : (
@@ -470,32 +470,23 @@ export default function DisplayScreen() {
                     )}
 
                     {/* Overlay Box Logic */}
-                    {status === 'AVAILABLE' ? (
+                    {activity ? (
                       <div className="absolute bottom-6 left-6 bg-black/80 p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
-                        <h3 className="text-lg opacity-75 uppercase tracking-widest mb-1">Room Available</h3>
-                        <p className="text-2xl font-bold">Scan to book instantly</p>
+                        <h3 className="text-lg opacity-75 uppercase tracking-widest mb-1">Current Activity</h3>
+                        <p className="text-3xl font-bold mb-1 truncate">{activity.title}</p>
+                        <p className="text-lg font-mono opacity-80">
+                          {new Date(activity.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <span className="mx-2">-</span>
+                          {new Date(activity.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
                       </div>
                     ) : (
-                      <>
-                        {activity ? (
-                          <div className="absolute bottom-6 left-6 bg-black/80 p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
-                            <h3 className="text-lg opacity-75 uppercase tracking-widest mb-1">Current Activity</h3>
-                            <p className="text-3xl font-bold mb-1 truncate">{activity.title}</p>
-                            <p className="text-lg font-mono opacity-80">
-                              {new Date(activity.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              <span className="mx-2">-</span>
-                              {new Date(activity.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                          </div>
-                        ) : (
-                          status === 'OCCUPIED' && (
-                            <div className="absolute bottom-6 left-6 bg-black/80 p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
-                              <h3 className="text-lg opacity-75 uppercase tracking-widest mb-1">Current Activity</h3>
-                              <p className="text-2xl font-bold">Meeting in Progress</p>
-                            </div>
-                          )
-                        )}
-                      </>
+                      status === 'OCCUPIED' && (
+                        <div className="absolute bottom-6 left-6 bg-black/80 p-6 rounded-2xl border-l-8 border-white animate-in slide-in-from-bottom-4 duration-700 delay-300 max-w-[80%]">
+                          <h3 className="text-lg opacity-75 uppercase tracking-widest mb-1">Current Activity</h3>
+                          <p className="text-2xl font-bold">Meeting in Progress</p>
+                        </div>
+                      )
                     )}
                   </div>
                 ) : (
