@@ -379,10 +379,10 @@ export default function DisplayScreen() {
   return (
     <>
       {isDefaultState && <UnderwaterBackground className="z-0" />}
-      {isBubbleState && <LightWavesBackground className="z-0" />}
+      {isBubbleState && <LightWavesBackground className="z-0" lowPerf={!!ad} />}
       <div className={`w-screen h-screen flex flex-col transition-colors duration-1000 ${(isDefaultState || isBubbleState) ? 'bg-transparent' : uiParams.bgColor} text-white overflow-hidden relative z-10`}>
         {/* Header Info */}
-        <header className="flex justify-between items-center px-8 py-6 bg-black/40 h-24 shrink-0">
+        <header className="flex justify-between items-center px-8 py-4 bg-black/40 h-20 shrink-0">
           {activity?.imageUrl ? (
             <div className="flex items-center gap-6">
               <img src={activity.imageUrl} alt="Activity Logo" className="h-16 w-16 object-cover rounded-xl bg-white/10" />
@@ -403,7 +403,7 @@ export default function DisplayScreen() {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex items-stretch justify-center p-8 gap-8 overflow-hidden relative">
+        <main className="flex-1 flex items-stretch justify-center p-6 lg:p-4 gap-8 overflow-hidden relative">
 
           {/* 1. QR SCREEN MODE */}
           {activity?.qrCode ? (
@@ -411,10 +411,10 @@ export default function DisplayScreen() {
               return (
                 <div className="flex-1 w-full h-full flex items-center justify-center gap-6 lg:gap-10">
                   {/* Left/Main Panel: QR Code, Title, Description */}
-                  <div className={`flex flex-col justify-center items-center text-center animate-in zoom-in-95 duration-500 ${ad ? 'w-[60%] lg:w-[65%]' : 'w-full'} transition-all pt-12 lg:pt-24`}>
+                  <div className={`flex flex-col justify-center items-center text-center animate-in zoom-in-95 duration-500 ${ad ? 'w-[60%] lg:w-[65%]' : 'w-full'} transition-all pt-2 lg:pt-4`}>
 
                     {/* QR Code Container */}
-                    <div className={`bg-white p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] shadow-[0_0_70px_-10px_rgba(255,255,255,0.3)] ring-4 ring-white/20 flex items-center justify-center aspect-square w-auto mb-6 lg:mb-10 mt-4 lg:mt-8 ${ad ? 'max-h-[38vh] lg:max-h-[42vh]' : 'max-h-[42vh] lg:max-h-[50vh]'}`}>
+                    <div className={`bg-white p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] shadow-[0_0_70px_-10px_rgba(255,255,255,0.3)] ring-4 ring-white/20 flex items-center justify-center aspect-square w-auto mb-4 lg:mb-6 mt-1 lg:mt-2 ${ad ? 'max-h-[40vh] lg:max-h-[45vh]' : 'max-h-[45vh] lg:max-h-[55vh]'}`}>
                       {activity.qrCode.type === 'IMAGE_URL' ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={activity.qrCode.data} alt="QR" className="w-full h-full object-contain" />
@@ -424,19 +424,28 @@ export default function DisplayScreen() {
                     </div>
 
                     {/* Text Content */}
-                    <div className={`space-y-1 lg:space-y-4 max-w-4xl flex flex-col items-center ${ad ? 'px-4' : ''}`}>
-                      <h1 className={`${ad ? 'text-4xl lg:text-6xl' : 'text-5xl lg:text-8xl'} font-black tracking-tight leading-none break-words line-clamp-2`}>
+                    <div className={`space-y-1 lg:space-y-2 max-w-4xl flex flex-col items-center ${ad ? 'px-4' : ''}`}>
+                      <h1 className={`${ad ? 'text-4xl lg:text-5xl' : 'text-5xl lg:text-7xl'} font-black tracking-tight leading-none break-words line-clamp-2`}>
                         {activity.title}
                       </h1>
                       {activity.description && (
-                        <p className={`${ad ? 'text-xl lg:text-3xl' : 'text-2xl lg:text-5xl'} mt-2 lg:mt-0 font-light opacity-80 leading-tight line-clamp-3`}>
+                        <p className={`${ad ? 'text-xl lg:text-2xl' : 'text-2xl lg:text-4xl'} mt-1 lg:mt-0 font-light opacity-80 leading-tight line-clamp-2`}>
                           {activity.description}
                         </p>
                       )}
-                      <div className={`pt-3 lg:pt-4 opacity-60 font-mono border-t border-white/20 inline-block mt-4 ${ad ? 'text-lg lg:text-xl' : 'text-lg lg:text-2xl'}`}>
-                        {new Date(activity.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        <span className="mx-3">-</span>
-                        {new Date(activity.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      <div className={`pt-2 lg:pt-3 opacity-60 font-mono border-t border-white/20 mt-3 ${ad ? 'text-base lg:text-lg' : 'text-lg lg:text-xl'}`}>
+                        {(() => {
+                          try {
+                            const start = new Date(activity.startTime);
+                            const end = new Date(activity.endTime);
+                            const h = (d: Date) => d.getHours().toString().padStart(2, '0');
+                            const m = (d: Date) => d.getMinutes().toString().padStart(2, '0');
+                            if (isNaN(start.getTime()) || isNaN(end.getTime())) return "Check Schedule";
+                            return `${h(start)}:${m(start)} - ${h(end)}:${m(end)}`;
+                          } catch (e) {
+                            return "Check Schedule";
+                          }
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -475,9 +484,18 @@ export default function DisplayScreen() {
                         <h3 className="text-lg opacity-75 uppercase tracking-widest mb-1">Current Activity</h3>
                         <p className="text-3xl font-bold mb-1 truncate">{activity.title}</p>
                         <p className="text-lg font-mono opacity-80">
-                          {new Date(activity.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          <span className="mx-2">-</span>
-                          {new Date(activity.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {(() => {
+                            try {
+                              const start = new Date(activity.startTime);
+                              const end = new Date(activity.endTime);
+                              const h = (d: Date) => d.getHours().toString().padStart(2, '0');
+                              const m = (d: Date) => d.getMinutes().toString().padStart(2, '0');
+                              if (isNaN(start.getTime()) || isNaN(end.getTime())) return "Check Schedule";
+                              return `${h(start)}:${m(start)} - ${h(end)}:${m(end)}`;
+                            } catch (e) {
+                              return "Check Schedule";
+                            }
+                          })()}
                         </p>
                       </div>
                     ) : (
@@ -492,20 +510,29 @@ export default function DisplayScreen() {
                 ) : (
                   // No Ad - Standard Text UI
                   <div className="flex flex-col justify-center h-full">
-                    <h1 className="text-7xl lg:text-8xl font-black uppercase tracking-tight leading-none break-words">
+                    <h1 className="text-5xl lg:text-6xl font-black uppercase tracking-tight leading-none break-words">
                       {uiParams.message}
                     </h1>
-                    <p className="text-3xl lg:text-4xl mt-4 opacity-90 font-light">{uiParams.subtext}</p>
+                    <p className="text-2xl lg:text-3xl mt-2 opacity-90 font-light">{uiParams.subtext}</p>
 
                     {/* Activity Info */}
                     {activity && (
-                      <div className="mt-8 lg:mt-12 bg-black/30 p-8 rounded-2xl border-l-8 border-white">
-                        <h3 className="text-xl lg:text-2xl opacity-75 uppercase tracking-widest text-sm mb-2">Current Activity</h3>
-                        <p className="text-4xl lg:text-5xl font-bold truncate">{activity.title}</p>
+                      <div className="mt-4 lg:mt-6 bg-black/30 p-6 rounded-2xl border-l-8 border-white">
+                        <h3 className="text-lg lg:text-xl opacity-75 uppercase tracking-widest text-sm mb-1">Current Activity</h3>
+                        <p className="text-3xl lg:text-4xl font-bold truncate">{activity.title}</p>
                         <p className="text-xl lg:text-2xl font-light mt-2 opacity-80 border-t border-white/20 pt-2 inline-block">
-                          {new Date(activity.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          <span className="mx-2">-</span>
-                          {new Date(activity.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {(() => {
+                            try {
+                              const start = new Date(activity.startTime);
+                              const end = new Date(activity.endTime);
+                              const h = (d: Date) => d.getHours().toString().padStart(2, '0');
+                              const m = (d: Date) => d.getMinutes().toString().padStart(2, '0');
+                              if (isNaN(start.getTime()) || isNaN(end.getTime())) return "Check Schedule";
+                              return `${h(start)}:${m(start)} - ${h(end)}:${m(end)}`;
+                            } catch (e) {
+                              return "Check Schedule";
+                            }
+                          })()}
                         </p>
                       </div>
                     )}

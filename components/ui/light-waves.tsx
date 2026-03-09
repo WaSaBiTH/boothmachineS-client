@@ -10,10 +10,11 @@ export interface LightWavesBackgroundProps {
   colors?: string[]
   /** Animation speed multiplier */
   speed?: number
-  /** Intensity of the effect (0-1)dddddd */
+  /** Intensity of the effect (0-1) */
   intensity?: number
+  /** Performance mode: reduce wave count if true */
+  lowPerf?: boolean
 }
-
 
 interface Wave {
   y: number
@@ -41,6 +42,7 @@ export function LightWavesBackground({
   colors = ["#0ea5e9", "#8b5cf6", "#06b6d4", "#a855f7", "#0284c7"],
   speed = 1,
   intensity = 0.6,
+  lowPerf = false,
 }: LightWavesBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -51,7 +53,7 @@ export function LightWavesBackground({
   const initWaves = useCallback(
     (height: number) => {
       const waves: Wave[] = []
-      const waveCount = 5
+      const waveCount = lowPerf ? 2 : 5
 
       for (let i = 0; i < waveCount; i++) {
         waves.push({
@@ -66,7 +68,7 @@ export function LightWavesBackground({
       }
       wavesRef.current = waves
     },
-    [colors],
+    [colors, lowPerf],
   )
 
   useEffect(() => {
