@@ -10,9 +10,10 @@ export interface LightWavesBackgroundProps {
   colors?: string[]
   /** Animation speed multiplier */
   speed?: number
-  /** Intensity of the effect (0-1) */
+  /** Intensity of the effect (0-1)dddddd */
   intensity?: number
 }
+
 
 interface Wave {
   y: number
