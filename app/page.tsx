@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { QRCodeSVG } from "qrcode.react"
 import Image from "next/image"
 import { Clock } from "@/components/clock"
@@ -59,10 +59,14 @@ export default function DisplayScreen() {
   const [mac, setMac] = useState<string | null>(null)
   const [status, setStatus] = useState<Status>("AVAILABLE")
   const [deviceInfo, setDeviceInfo] = useState<{ name?: string, room?: string }>({})
-  const [activity, setActivity] = useState<{ title: string, imageUrl?: string, startTime: string, endTime: string, description?: string, qrCode?: { data: string, type: 'GENERATED' | 'IMAGE_URL' } } | null>(null)
+  const [activity, setActivity] = useState<{ id?: string, title: string, imageUrl?: string, startTime: string, endTime: string, description?: string, qrCode?: { data: string, type: 'GENERATED' | 'IMAGE_URL' } } | null>(null)
   const [ad, setAd] = useState<{ id: string, name: string, type: 'IMAGE' | 'VIDEO', url: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [logs, setLogs] = useState<{ msg: string, type: 'info' | 'error' }[]>([])
+  
+  // Dynamic QR States
+  const [scanUrl, setScanUrl] = useState("")
+  const [countdown, setCountdown] = useState(30)
   // const [time, setTime] = useState(new Date()) -> Moved to Clock component
   const [lastSync, setLastSync] = useState<Date | null>(null)
   const [showInfo, setShowInfo] = useState(false)
@@ -244,6 +248,70 @@ export default function DisplayScreen() {
 
     return () => clearTimeout(timeoutId)
   }, [mac, status, loading])
+
+  // Dynamic QR Refresh Logic
+  const generateQRCode = useCallback(async () => {
+    if (!activity || !activity.id || activity.qrCode) return;
+    try {
+      const apiHost = process.env.NEXT_PUBLIC_API_HOST || 'http://localhost';
+      const apiPort = process.env.NEXT_PUBLIC_API_PORT || '4000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || `${apiHost}:${apiPort}`;
+
+      const res = await fetch(`${apiUrl}/api/qrcode/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          qr_session_id: activity.id,
+          macAddress: mac
+        })
+      });
+      const data = await res.json();
+      if (data.scan_url) {
+        setScanUrl(data.scan_url);
+        setCountdown(30);
+      }
+    } catch (err) {
+      console.error("Failed to refresh QR:", err);
+    }
+  }, [activity, mac]);
+
+  useEffect(() => {
+    if (!activity || !activity.id || activity.qrCode) {
+      setScanUrl("");
+      return;
+    }
+
+    // Initial generation
+    generateQRCode();
+
+    // Standard 30s refresh
+    const refreshInterval = setInterval(generateQRCode, 30000);
+
+    // Instant Refresh Polling (every 2 seconds)
+    const pollInterval = setInterval(async () => {
+      try {
+        const apiHost = process.env.NEXT_PUBLIC_API_HOST || 'http://localhost';
+        const apiPort = process.env.NEXT_PUBLIC_API_PORT || '4000';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || `${apiHost}:${apiPort}`;
+        const res = await fetch(`${apiUrl}/api/qrcode/poll/${activity.id}`);
+        const data = await res.json();
+        if (data.used) {
+          generateQRCode();
+        }
+      } catch (e) { }
+    }, 2000);
+
+    // Countdown interval
+    const countdownInterval = setInterval(() => {
+      setCountdown(prev => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => {
+      clearInterval(refreshInterval);
+      clearInterval(pollInterval);
+      clearInterval(countdownInterval);
+    };
+  }, [activity?.id, !!activity?.qrCode, generateQRCode])
 
   const uiParams = getStatusParams(status)
   const isDefaultState = status === 'AVAILABLE' && !activity
@@ -548,13 +616,51 @@ export default function DisplayScreen() {
 
               {/* Right Panel: Fixed QR Code (Always on Right for Standard Mode) */}
               <div className="w-[30%] max-w-sm shrink-0 bg-white rounded-3xl shadow-2xl flex flex-col items-center justify-center p-8 text-slate-900 animate-in zoom-in-50 duration-500 h-full max-h-full relative overflow-hidden">
-
-                {/* Logo with Orange Shadow & Floating Effect */}
-                <div className="bg-white p-4 rounded-xl shadow-sm mb-6 shrink-0">
-                  <QRCodeSVG value="https://dn721809.ca.archive.org/0/items/youtube-xvFZjo5PgG0/xvFZjo5PgG0.mp4" size={180} level="H" className="w-full h-auto max-w-[200px]" />
+                {/* QR Image Container (Inner borders/padding removed) */}
+                <div className="flex items-center justify-center w-full aspect-square mb-6 shrink-0 relative">
+                  {scanUrl ? (
+                    <QRCodeSVG value={scanUrl} size={220} level="H" className="w-full h-auto max-w-[240px]" />
+                  ) : (
+                    <div className="w-48 h-48 bg-slate-100 animate-pulse rounded-lg flex items-center justify-center text-slate-300 text-xs text-center p-4">
+                      Loading QR...
+                    </div>
+                  )}
                 </div>
-                <p className="text-center text-xl font-bold shrink-0">Scan to Check-in</p>
-                <p className="text-center text-slate-500 mt-2 shrink-0">Use your phone to register your attendance.</p>
+
+                <p className="text-center text-2xl font-black tracking-tight shrink-0 uppercase">Scan to Check-in</p>
+                <p className="text-center text-slate-500 mt-2 shrink-0 text-sm">Use your phone to register your attendance.</p>
+
+                {scanUrl && (
+                  <div className="mt-8 relative flex items-center justify-center shrink-0">
+                    {/* Circular Countdown Spinner */}
+                    <svg className="w-12 h-12 transform -rotate-90">
+                      <circle
+                        cx="24"
+                        cy="24"
+                        r="20"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="transparent"
+                        className="text-slate-100"
+                      />
+                      <circle
+                        cx="24"
+                        cy="24"
+                        r="20"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="transparent"
+                        strokeDasharray={2 * Math.PI * 20}
+                        strokeDashoffset={2 * Math.PI * 20 * (1 - countdown / 30)}
+                        className="text-orange-500 transition-all duration-1000 ease-linear"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span className="absolute text-[10px] font-bold font-mono text-slate-400">
+                      {countdown}
+                    </span>
+                  </div>
+                )}
               </div>
             </>
           )}
