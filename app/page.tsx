@@ -307,19 +307,19 @@ export default function DisplayScreen() {
     // Standard 30s refresh
     const refreshInterval = setInterval(generateQRCode, 30000);
 
-    // Instant Refresh Polling (every 2 seconds)
+    // Instant Refresh Polling (every 500ms for immediate feedback)
     const pollInterval = setInterval(async () => {
       try {
         const apiHost = process.env.NEXT_PUBLIC_API_HOST || 'http://localhost';
         const apiPort = process.env.NEXT_PUBLIC_API_PORT || '4000';
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || `${apiHost}:${apiPort}`;
-        const res = await fetch(`${apiUrl}/api/qrcode/poll/${activity.id}`);
+        const res = await fetch(`${apiUrl}/api/qrcode/poll/${activity.id}`, { cache: 'no-store' });
         const data = await res.json();
         if (data.used) {
           generateQRCode();
         }
       } catch (e) { }
-    }, 2000);
+    }, 500);
 
     // Countdown interval
     const countdownInterval = setInterval(() => {
