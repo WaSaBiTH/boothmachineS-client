@@ -8,29 +8,39 @@ interface ClockProps {
 
 export function Clock({ className }: ClockProps) {
     const [time, setTime] = useState<string>("")
+    const [date, setDate] = useState<string>("")
 
     useEffect(() => {
-        // Initial set
-        const formatTime = (date: Date) => {
-            const hours = date.getHours().toString().padStart(2, '0');
-            const minutes = date.getMinutes().toString().padStart(2, '0');
-            return `${hours}:${minutes}`;
+        const updateDateTime = () => {
+            const now = new Date();
+            
+            // Format time
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            setTime(`${hours}:${minutes}`);
+
+            // Format date (Buddhist Era: year + 543)
+            const d = now.getDate().toString().padStart(2, '0');
+            const m = (now.getMonth() + 1).toString().padStart(2, '0');
+            const y = (now.getFullYear() + 543).toString();
+            setDate(`${d}/${m}/${y}`);
         }
 
-        setTime(formatTime(new Date()));
+        updateDateTime();
 
-        const timer = setInterval(() => {
-            setTime(formatTime(new Date()));
-        }, 1000)
+        const timer = setInterval(updateDateTime, 1000)
 
         return () => clearInterval(timer)
     }, [])
 
-    // Prevent hydration mismatch by rendering a placeholder or empty string initially/server-side if needed,
-    // but since we set state in useEffect, initial render is empty string.
     return (
-        <div className={className}>
-            {time}
+        <div className={`flex flex-col items-end leading-none ${className}`}>
+            <div className="text-xs font-semibold tracking-[0.35em] opacity-70 uppercase border-b border-white/40 pb-1 mb-0.5 w-fit">
+                {date}
+            </div>
+            <div className="text-5xl font-mono font-medium tracking-tight">
+                {time}
+            </div>
         </div>
     )
 }

@@ -485,9 +485,7 @@ export default function DisplayScreen() {
               <span className="text-5xl font-mono font-medium tracking-tight">{deviceInfo.room || '---'}</span>
             </div>
           )}
-          <div className="text-5xl font-mono font-medium">
-            <Clock />
-          </div>
+          <Clock />
         </header>
 
         {/* Main Content Area */}
