@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
+
 import { QRCodeSVG } from "qrcode.react"
 import Image from "next/image"
 import { Clock } from "@/components/clock"
@@ -59,14 +60,15 @@ export default function DisplayScreen() {
   const [mac, setMac] = useState<string | null>(null)
   const [status, setStatus] = useState<Status>("AVAILABLE")
   const [deviceInfo, setDeviceInfo] = useState<{ name?: string, room?: string }>({})
-  const [activity, setActivity] = useState<{ id: string, title: string, imageUrl?: string, startTime: string, endTime: string, description?: string, qrCode?: { data: string, type: 'GENERATED' | 'IMAGE_URL' } } | null>(null)
+  const [activity, setActivity] = useState<{ id?: string, title: string, imageUrl?: string, startTime: string, endTime: string, description?: string, qrCode?: { data: string, type: 'GENERATED' | 'IMAGE_URL' } } | null>(null)
+
   const [ad, setAd] = useState<{ id: string, name: string, type: 'IMAGE' | 'VIDEO', url: string } | null>(null)
-  const [scanUrl, setScanUrl] = useState<string>("")
-  const [countdown, setCountdown] = useState<number>(30)
   const [loading, setLoading] = useState(true)
-  const qrIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const [logs, setLogs] = useState<{ msg: string, type: 'info' | 'error' }[]>([])
+  
+  // Dynamic QR States
+  const [scanUrl, setScanUrl] = useState("")
+  const [countdown, setCountdown] = useState(30)
   // const [time, setTime] = useState(new Date()) -> Moved to Clock component
   const [lastSync, setLastSync] = useState<Date | null>(null)
   const [showInfo, setShowInfo] = useState(false)
@@ -268,7 +270,8 @@ export default function DisplayScreen() {
 
   // Dynamic QR Refresh Logic
   const generateQRCode = useCallback(async () => {
-    if (!activity || activity.qrCode) return;
+    if (!activity || !activity.id || activity.qrCode) return;
+
     try {
       const apiHost = process.env.NEXT_PUBLIC_API_HOST || 'http://localhost';
       const apiPort = process.env.NEXT_PUBLIC_API_PORT || '4000';
@@ -293,7 +296,7 @@ export default function DisplayScreen() {
   }, [activity, mac]);
 
   useEffect(() => {
-    if (!activity || activity.qrCode) {
+    if (!activity || !activity.id || activity.qrCode) {
       setScanUrl("");
       return;
     }
@@ -309,7 +312,7 @@ export default function DisplayScreen() {
       try {
         const apiHost = process.env.NEXT_PUBLIC_API_HOST || 'http://localhost';
         const apiPort = process.env.NEXT_PUBLIC_API_PORT || '4000';
-        const apiUrl = `${apiHost}:${apiPort}`;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || `${apiHost}:${apiPort}`;
         const res = await fetch(`${apiUrl}/api/qrcode/poll/${activity.id}`);
         const data = await res.json();
         if (data.used) {
@@ -681,9 +684,11 @@ export default function DisplayScreen() {
                   )}
                 </div>
               )}
+
             </>
           )}
         </main>
+
 
         {/* Floating Info Button */}
         <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
