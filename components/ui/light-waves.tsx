@@ -53,17 +53,17 @@ export function LightWavesBackground({
   const initWaves = useCallback(
     (height: number) => {
       const waves: Wave[] = []
-      const waveCount = lowPerf ? 2 : 5
+      const waveCount = lowPerf ? 1 : 5
 
       for (let i = 0; i < waveCount; i++) {
         waves.push({
-          y: height * (0.3 + (i / waveCount) * 0.5),
-          amplitude: height * (0.15 + Math.random() * 0.15),
+          y: height * (lowPerf ? 0.6 : 0.3 + (i / waveCount) * 0.5),
+          amplitude: height * (lowPerf ? 0.35 : 0.15 + Math.random() * 0.15),
           frequency: 0.002 + Math.random() * 0.002,
           speed: (0.2 + Math.random() * 0.3) * (i % 2 === 0 ? 1 : -1),
           phase: Math.random() * Math.PI * 2,
           color: colors[i % colors.length],
-          opacity: 0.15 + Math.random() * 0.1,
+          opacity: lowPerf ? 0.45 : 0.15 + Math.random() * 0.1,
         })
       }
       wavesRef.current = waves
@@ -106,8 +106,9 @@ export function LightWavesBackground({
       ctx.fillStyle = bgGradient
       ctx.fillRect(0, 0, width, height)
 
-      // Draw ambient glow spots
-      ctx.globalCompositeOperation = "lighter"
+      // Draw ambient glow spots only if not lowPerf to save Pi resources
+      if (!lowPerf) {
+        ctx.globalCompositeOperation = "lighter"
 
       const glowSpots = [
         {
@@ -143,8 +144,7 @@ export function LightWavesBackground({
         gradient.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.08 * intensity})`)
         gradient.addColorStop(0.5, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.03 * intensity})`)
         gradient.addColorStop(1, "transparent")
-        ctx.fillStyle = gradient
-        ctx.fillRect(0, 0, width, height)
+        }
       }
 
       // Draw flowing waves
@@ -191,16 +191,18 @@ export function LightWavesBackground({
         ctx.fill()
       }
 
-      // Add subtle top glow
-      ctx.globalCompositeOperation = "source-over"
-      const topGlow = ctx.createLinearGradient(0, 0, 0, height * 0.4)
-      topGlow.addColorStop(
-        0,
-        `rgba(${hexToRgb(colors[0]).r}, ${hexToRgb(colors[0]).g}, ${hexToRgb(colors[0]).b}, ${0.05 * intensity})`,
-      )
-      topGlow.addColorStop(1, "transparent")
-      ctx.fillStyle = topGlow
-      ctx.fillRect(0, 0, width, height * 0.4)
+      if (!lowPerf) {
+        // Add subtle top glow
+        ctx.globalCompositeOperation = "source-over"
+        const topGlow = ctx.createLinearGradient(0, 0, 0, height * 0.4)
+        topGlow.addColorStop(
+          0,
+          `rgba(${hexToRgb(colors[0]).r}, ${hexToRgb(colors[0]).g}, ${hexToRgb(colors[0]).b}, ${0.05 * intensity})`,
+        )
+        topGlow.addColorStop(1, "transparent")
+        ctx.fillStyle = topGlow
+        ctx.fillRect(0, 0, width, height * 0.4)
+      }
 
       animationRef.current = requestAnimationFrame(draw)
     }
