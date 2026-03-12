@@ -153,6 +153,6 @@ run tee "$AUTOSTART" >/dev/null << EOF
 #!/bin/bash
 chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --enable-features=OverlayScrollbar --start-maximized --password-store=basic http://127.0.0.1:$PORT
 EOF
-
+run chmod 0755 "$AUTOSTART"
 log info "Finish setting the environment\n The suggestion now is to reboot the device."
 log warn "After reboot, if everything works correctly\n you should see Chromium open withboothmachineS-client open"
