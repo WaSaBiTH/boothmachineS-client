@@ -204,7 +204,8 @@ def send_heartbeat(api_url, mac, ip):
     url = f"{api_url}/api/device/heartbeat"
     data = {
         "macAddress": mac,
-        "ipAddress": ip
+        "ipAddress": ip,
+        "clientType": "system"
     }
     
     try:

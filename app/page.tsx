@@ -184,7 +184,8 @@ export default function DisplayScreen() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             macAddress: mac,
-            ipAddress: currentIp
+            ipAddress: currentIp,
+            clientType: 'web'
           })
         })
 
