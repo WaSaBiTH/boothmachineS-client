@@ -275,7 +275,8 @@ export default function DisplayScreen() {
     try {
       const apiHost = process.env.NEXT_PUBLIC_API_HOST || 'http://localhost';
       const apiPort = process.env.NEXT_PUBLIC_API_PORT || '4000';
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || `${apiHost}:${apiPort}`;
+      const qrApi = process.env.NEXT_PUBLIC_QRCODE_API || process.env.NEXT_PUBLIC_API_URL || `${apiHost}:${apiPort}`;
+      const apiUrl = qrApi;
 
       const res = await fetch(`${apiUrl}/api/qrcode/generate`, {
         method: 'POST',
@@ -312,7 +313,8 @@ export default function DisplayScreen() {
       try {
         const apiHost = process.env.NEXT_PUBLIC_API_HOST || 'http://localhost';
         const apiPort = process.env.NEXT_PUBLIC_API_PORT || '4000';
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || `${apiHost}:${apiPort}`;
+        const qrApi = process.env.NEXT_PUBLIC_QRCODE_API || process.env.NEXT_PUBLIC_API_URL || `${apiHost}:${apiPort}`;
+        const apiUrl = qrApi;
         const res = await fetch(`${apiUrl}/api/qrcode/poll/${activity.id}`, { cache: 'no-store' });
         const data = await res.json();
         if (data.used) {
