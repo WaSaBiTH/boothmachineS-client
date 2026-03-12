@@ -148,7 +148,7 @@ def update_env():
     # Track existing config
     config = {
         "PORT": "3000",
-        "NEXT_PUBLIC_API_URL": "http://localhost:4000",
+        "NEXT_PUBLIC_API_URL": "http://localhost:6060",
         "NEXT_PUBLIC_POLLING_INTERVAL": "30000" # Default 30s
     }
 

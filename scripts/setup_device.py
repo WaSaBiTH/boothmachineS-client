@@ -12,9 +12,11 @@ def setup():
     if not api_host:
         api_host = "http://localhost"
         
-    api_port = input("Enter API Port [default: 4000]: ").strip()
+    api_port = input("Enter API Port [default: 6060]: ").strip()
     if not api_port:
-        api_port = "4000"
+        api_port = "6060"
+        
+    scan_web_url = input("Enter Public Scan URL (e.g. https://your-ngrok.io) [optional]: ").strip()
         
     client_port = input("Enter Client Port [default: 3001]: ").strip()
     if not client_port:
@@ -33,6 +35,9 @@ NEXT_PUBLIC_API_URL={api_host}:{api_port}
 NEXT_PUBLIC_POLLING_INTERVAL={poll_interval}
 PORT={client_port}
 """
+    if scan_web_url:
+        env_content += f"NEXT_PUBLIC_SCAN_WEB={scan_web_url}\n"
+
     client_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     env_path = os.path.join(client_dir, '.env')
     

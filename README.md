@@ -28,8 +28,9 @@ python scripts/setup_device.py
 ```
 
 Prompts:
-- **API URL**: The URL of your main `boothmachineS-config` API (e.g., `http://192.168.1.10:4000`).
-- **Client Port**: The port this screen should run on (e.g., `3001.`).
+- **API URL**: The URL of your main `boothscan` API (e.g., `http://192.168.1.10:6060`).
+- **Public Scan URL**: The ngrok or public URL for mobile scanning (e.g., `https://your-ngrok.io`).
+- **Client Port**: The port this screen should run on (e.g., `3001`).
 
 This will generate a `.env` file and platform-specific startup scripts.
 
@@ -60,7 +61,10 @@ The `.env` file is automatically managed, but you can manually configure the API
 ```env
 # API Configuration
 NEXT_PUBLIC_API_HOST=http://localhost
-NEXT_PUBLIC_API_PORT=4000
+NEXT_PUBLIC_API_PORT=6060
+
+# Public URL (for mobile scanning QR)
+NEXT_PUBLIC_SCAN_WEB=https://your-ngrok.io
 
 # Client Port
 PORT=3001
